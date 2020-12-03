@@ -334,13 +334,13 @@ std::string FormatDateTime(time_t dateTimeEpg, time_t duration, const std::strin
 
   return formattedUrl;
 }
-
-std::string FormatDateTimeStream(time_t dateTimeEpg, time_t duration, const std::string &urlFormatString)
+// addition to modify realtime stream URL
+std::string FormatDateTimeStream(time_t dateTimeStream, const std::string &urlFormatString)
 {
   std::string formattedUrlStream = urlFormatString;
 
   const time_t dateTimeNow = std::time(0);
-  tm* dateTime = std::localtime(&dateTimeEpg);
+  tm* dateTime = std::localtime(&dateTimeStream);
 
   FormatTime('Y', dateTime, formattedUrlStream);
   FormatTime('m', dateTime, formattedUrlStream);
@@ -348,8 +348,8 @@ std::string FormatDateTimeStream(time_t dateTimeEpg, time_t duration, const std:
   FormatTime('H', dateTime, formattedUrlStream);
   FormatTime('M', dateTime, formattedUrlStream);
   FormatTime('S', dateTime, formattedUrlStream);
-  FormatUtc("{utc}", dateTimeEpg, formattedUrlStream);
-  FormatUtc("${start}", dateTimeEpg, formattedUrlStream);
+  FormatUtc("{utc}", dateTimeStream, formattedUrlStream);
+  FormatUtc("${start}", dateTimeStream, formattedUrlStream);
   FormatUtc("{lutc}", dateTimeNow, formattedUrlStream);
   
   Logger::Log(LEVEL_DEBUG, "%s - \"%s\"", __FUNCTION__, formattedUrlStream.c_str());
@@ -396,7 +396,17 @@ std::string BuildEpgTagUrl(time_t startTime, time_t duration, const Channel& cha
 
   return startTimeUrl;
 }
+// addition to modify realtime stream URL
+std::string BuildRealtimeTagUrl(const Channel& channel, int timezoneShiftSecs)
+{
+  std::string startTimeUrl;
+  time_t timeNow = std::time(nullptr);
+  startTimeUrl = FormatDateTimeStream(timezoneShiftSecs, channel.GetStreamURL());
+  Logger::Log(LEVEL_DEBUG, "%s - %s", __FUNCTION__, startTimeUrl.c_str());
 
+  return startTimeUrl;
+}  
+  
 } // unnamed namespace
 
 std::string CatchupController::GetCatchupUrlFormatString(const Channel& channel) const
@@ -431,6 +441,13 @@ std::string CatchupController::GetCatchupUrl(const Channel& channel) const
   }
 
   return "";
+}
+// addition to modify realtime stream URL
+std::string CatchupController::GetRealtimeUrlFormatString(const Channel& channel) const
+{
+
+    return BuildRealtimeTagUrl(channel,  channel.GetCatchupCorrectionSecs());
+ 
 }
 
 std::string CatchupController::GetStreamTestUrl(const Channel& channel, bool fromEpg) const
