@@ -335,6 +335,28 @@ std::string FormatDateTime(time_t dateTimeEpg, time_t duration, const std::strin
   return formattedUrl;
 }
 
+std::string FormatDateTimeStream(time_t dateTimeEpg, time_t duration, const std::string &urlFormatString)
+{
+  std::string formattedUrlStream = urlFormatString;
+
+  const time_t dateTimeNow = std::time(0);
+  tm* dateTime = std::localtime(&dateTimeEpg);
+
+  FormatTime('Y', dateTime, formattedUrlStream);
+  FormatTime('m', dateTime, formattedUrlStream);
+  FormatTime('d', dateTime, formattedUrlStream);
+  FormatTime('H', dateTime, formattedUrlStream);
+  FormatTime('M', dateTime, formattedUrlStream);
+  FormatTime('S', dateTime, formattedUrlStream);
+  FormatUtc("{utc}", dateTimeEpg, formattedUrlStream);
+  FormatUtc("${start}", dateTimeEpg, formattedUrlStream);
+  FormatUtc("{lutc}", dateTimeNow, formattedUrlStream);
+  
+  Logger::Log(LEVEL_DEBUG, "%s - \"%s\"", __FUNCTION__, formattedUrlStream.c_str());
+
+  return formattedUrlStream;
+}  
+  
 std::string AppendQueryStringAndPreserveOptions(const std::string &url, const std::string &postfixQueryString)
 {
   std::string urlFormatString;
